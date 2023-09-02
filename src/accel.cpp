@@ -6,6 +6,9 @@
 
 #include <nori/accel.h>
 #include <Eigen/Geometry>
+#include <nori/octree.h>
+#include <iostream>
+#include <chrono>
 
 NORI_NAMESPACE_BEGIN
 
@@ -18,6 +21,13 @@ void Accel::addMesh(Mesh *mesh) {
 
 void Accel::build() {
     /* Nothing to do here for now */
+
+    auto start = std::chrono::high_resolution_clock::now();
+    root = Octree::build(m_mesh);
+    auto end = std::chrono::high_resolution_clock::now();
+    cout << m_mesh->getTriangleCount() << endl;
+    std::cout << "OctTree build time:" 
+        <<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
 }
 
 bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) const {
@@ -27,11 +37,12 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
     Ray3f ray(ray_); /// Make a copy of the ray (we will need to update its '.maxt' value)
 
     /* Brute force search through all triangles */
+   /*
     for (uint32_t idx = 0; idx < m_mesh->getTriangleCount(); ++idx) {
         float u, v, t;
         if (m_mesh->rayIntersect(idx, ray, u, v, t)) {
-            /* An intersection was found! Can terminate
-               immediately if this is a shadow ray query */
+            // An intersection was found! Can terminate
+            //   immediately if this is a shadow ray query 
             if (shadowRay)
                 return true;
             ray.maxt = its.t = t;
@@ -40,8 +51,9 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
             f = idx;
             foundIntersection = true;
         }
-    }
-
+    }*/ 
+    auto now = std::chrono::high_resolution_clock::now();
+    foundIntersection = root->traverse(ray, its, f, shadowRay, m_mesh);
     if (foundIntersection) {
         /* At this point, we now know that there is an intersection,
            and we know the triangle index of the closest such intersection.
@@ -63,7 +75,6 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
 
         /* Vertex indices of the triangle */
         uint32_t idx0 = F(0, f), idx1 = F(1, f), idx2 = F(2, f);
-
         Point3f p0 = V.col(idx0), p1 = V.col(idx1), p2 = V.col(idx2);
 
         /* Compute the intersection positon accurately
@@ -71,11 +82,12 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
         its.p = bary.x() * p0 + bary.y() * p1 + bary.z() * p2;
 
         /* Compute proper texture coordinates if provided by the mesh */
+        
         if (UV.size() > 0)
             its.uv = bary.x() * UV.col(idx0) +
                 bary.y() * UV.col(idx1) +
-                bary.z() * UV.col(idx2);
-
+                bary.z() * UV.col(idx2); 
+          
         /* Compute the geometry frame */
         its.geoFrame = Frame((p1-p0).cross(p2-p0).normalized());
 
@@ -85,7 +97,6 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
                tangents that are continuous across the surface. That
                means that this code will need to be modified to be able
                use anisotropic BRDFs, which need tangent continuity */
-
             its.shFrame = Frame(
                 (bary.x() * N.col(idx0) +
                  bary.y() * N.col(idx1) +
@@ -94,7 +105,6 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
             its.shFrame = its.geoFrame;
         }
     }
-
     return foundIntersection;
 }
 
