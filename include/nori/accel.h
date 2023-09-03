@@ -58,7 +58,7 @@ public:
 private:
     Mesh         *m_mesh = nullptr; ///< Mesh (only a single one for now)
     BoundingBox3f m_bbox;           ///< Bounding box of the entire scene
-    Octree* root = nullptr;
+    Octree octree;
 };
 
 NORI_NAMESPACE_END

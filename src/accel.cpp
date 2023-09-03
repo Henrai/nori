@@ -23,11 +23,15 @@ void Accel::build() {
     /* Nothing to do here for now */
 
     auto start = std::chrono::high_resolution_clock::now();
-    root = Octree::build(m_mesh);
+    octree.build(m_mesh);
     auto end = std::chrono::high_resolution_clock::now();
     cout << m_mesh->getTriangleCount() << endl;
-    std::cout << "OctTree build time:" 
+    cout << "build time:" 
         <<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
+    cout << "max depth: " << octree.max_depth << endl;
+    cout << "interior nodes: " << octree.node_cnt << endl;
+    cout << "lead node: " << octree.leaf_cnt << endl;
+    cout << "average leaf cnt: " << octree.triangle_cnt / octree.leaf_cnt << endl;
 }
 
 bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) const {
@@ -52,8 +56,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
             foundIntersection = true;
         }
     }*/ 
-    auto now = std::chrono::high_resolution_clock::now();
-    foundIntersection = root->traverse(ray, its, f, shadowRay, m_mesh);
+    foundIntersection = octree.traverse(ray, its, f, shadowRay, m_mesh);
     if (foundIntersection) {
         /* At this point, we now know that there is an intersection,
            and we know the triangle index of the closest such intersection.

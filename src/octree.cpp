@@ -10,20 +10,31 @@
 #include <chrono>
 #include <vector>
 NORI_NAMESPACE_BEGIN
-Octree* Octree::build(Mesh* mesh) {
+void Octree::build(Mesh* mesh) {
+    if (mesh == nullptr) {
+        root = nullptr;
+        return;
+    }
     uint32_t triangleCnt = mesh->getTriangleCount();
     std::vector<uint32_t> triangles(triangleCnt);
     std::iota(triangles.begin(), triangles.end(), 0);
-    return build(mesh->getBoundingBox(), triangles, mesh);
+    root = build(1, mesh->getBoundingBox(), triangles, mesh);
 }
 
-Octree* Octree::build(const BoundingBox3f& bbox, std::vector<uint32_t>& triangles, Mesh* mesh) {
-    Octree* node = new Octree();
+Octree::NodePtr Octree::build(int depth, const BoundingBox3f& bbox, const std::vector<uint32_t>& triangles, Mesh* mesh) {
+
+    if (depth > max_depth) max_depth = depth;
+    NodePtr node = std::make_unique<Node>();
     node->box = bbox;
-    node->children = std::vector<Octree*>(0);
+    node->children = std::vector<NodePtr>(0);
     node->ids = triangles;
     
-    if (triangles.size() < 100) return node;
+    if (triangles.size() < MAX_NODE || depth == MAX_DEPTH) {
+        leaf_cnt++;
+        triangle_cnt += triangles.size();
+        return node;
+    }
+    node_cnt++;
     node->children.resize(8);
     auto minP = bbox.min, maxP = bbox.max;
     auto midP = bbox.getCenter();
@@ -48,14 +59,19 @@ Octree* Octree::build(const BoundingBox3f& bbox, std::vector<uint32_t>& triangle
             tri_box.expandBy(p2);
             if (child_box.overlaps(tri_box)) triangleId.push_back(id);
         }
-        node->children[i] = build(child_box, triangleId, mesh);
+        node->children[i] = build(depth + 1, child_box, triangleId, mesh);
            
     }
 
     return node;
 }
 
-bool Octree::traverse(Ray3f & ray, Intersection & it, uint32_t & idx, bool shadowRay, Mesh * mesh) {
+bool Octree::traverse(Ray3f& ray, Intersection& it, uint32_t& idx, bool shadowRay, Mesh* mesh) const
+{
+    return root->traverse(ray, it, idx, shadowRay, mesh, shouldSort);
+}
+
+bool Octree::Node::traverse(Ray3f & ray, Intersection & it, uint32_t & idx, bool shadowRay, Mesh * mesh, bool shouldSort) const {
     if (!box.rayIntersect(ray)) return false;
     bool isHit= false;
     if (children.size() == 0) {
@@ -73,12 +89,33 @@ bool Octree::traverse(Ray3f & ray, Intersection & it, uint32_t & idx, bool shado
         }
     }
     else {
-        for (auto i : children) {
-            isHit |= i->traverse(ray, it, idx, shadowRay, mesh);
-            if (shadowRay && isHit) return true;
+        if (shouldSort) {
+            std::pair<float, size_t> distances[8] = {};
+            for (int i = 0; i < 8; i++) {
+                float distance = children[i]->box.distanceTo(ray.o);
+                distances[i] = std::move(std::make_pair(distance, i));
+            }
+
+            std::sort(distances, distances + 8, [](const auto& l, const auto& r) { return l.first < r.first; });
+
+            for (auto pair : distances) {
+                float distance = pair.first;
+                Node* child = children[pair.second].get();
+                if (distance > ray.maxt) break;
+                isHit |= child->traverse(ray, it, idx, shadowRay, mesh, shouldSort);
+                if (shadowRay && isHit) return true;
+            }
+        }
+        else {
+            for (const auto& child : children) {
+                isHit |= child->traverse(ray, it, idx, shadowRay, mesh, shouldSort);
+                if (shadowRay && isHit) return true;
+            }
         }
     }
     return isHit;
 }
+
+
 
 NORI_NAMESPACE_END
