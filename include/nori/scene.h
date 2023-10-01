@@ -8,9 +8,11 @@
 
 #include <nori/accel.h>
 
-NORI_NAMESPACE_BEGIN
+#include "emitter.h"
+#include "sampler.h"
 
-/**
+NORI_NAMESPACE_BEGIN
+	/**
  * \brief Main scene data structure
  *
  * This class holds information on scene objects and is responsible for
@@ -45,6 +47,12 @@ public:
 
     /// Return a reference to an array containing all meshes
     const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
+
+    Emitter* sampleLight(float sample, EmitterQueryRecord& record) const
+    {
+        size_t id = lightPdf.sample(sample, record.pdf);
+	    return m_emitters[id];
+    }
 
     /**
      * \brief Intersect a ray against all triangles stored in the scene
@@ -106,6 +114,8 @@ public:
     EClassType getClassType() const { return EScene; }
 private:
     std::vector<Mesh *> m_meshes;
+    std::vector<Emitter*> m_emitters;
+    DiscretePDF lightPdf;
     Integrator *m_integrator = nullptr;
     Sampler *m_sampler = nullptr;
     Camera *m_camera = nullptr;

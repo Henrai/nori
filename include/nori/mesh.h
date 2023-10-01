@@ -9,6 +9,7 @@
 #include <nori/object.h>
 #include <nori/frame.h>
 #include <nori/bbox.h>
+#include <nori/dpdf.h>
 
 NORI_NAMESPACE_BEGIN
 
@@ -72,6 +73,8 @@ public:
 
     /// Return the total number of vertices in this shape
     uint32_t getVertexCount() const { return (uint32_t) m_V.cols(); }
+
+    void sampleTriangle(Sampler* sampler, EmitterQueryRecord& record);
 
     /// Return the surface area of the given triangle
     float surfaceArea(uint32_t index) const;
@@ -151,6 +154,8 @@ public:
      * */
     EClassType getClassType() const { return EMesh; }
 
+    float getTotalArea() const { return m_totalArea; }
+
 protected:
     /// Create an empty mesh
     Mesh();
@@ -164,6 +169,8 @@ protected:
     BSDF         *m_bsdf = nullptr;      ///< BSDF of the surface
     Emitter    *m_emitter = nullptr;     ///< Associated emitter, if any
     BoundingBox3f m_bbox;                ///< Bounding box of the mesh
+    DiscretePDF dpdf;                    ///< sampler for the whole mesh
+    float m_totalArea;
 };
 
 NORI_NAMESPACE_END

@@ -37,6 +37,7 @@ void Scene::activate() {
         m_sampler = static_cast<Sampler*>(
             NoriObjectFactory::createInstance("independent", PropertyList()));
     }
+    lightPdf.normalize();
 
     cout << endl;
     cout << "Configuration: " << toString() << endl;
@@ -49,12 +50,19 @@ void Scene::addChild(NoriObject *obj) {
                 Mesh *mesh = static_cast<Mesh *>(obj);
                 m_accel->addMesh(mesh);
                 m_meshes.push_back(mesh);
+                if(mesh->isEmitter())
+                {
+                    Emitter* emitter = mesh->getEmitter();
+                    m_emitters.push_back(emitter);
+                    lightPdf.append(emitter->getMesh()->getTotalArea());
+                }
             }
             break;
         
         case EEmitter: {
-                //Emitter *emitter = static_cast<Emitter *>(obj);
-                /* TBD */
+              
+            //Emitter *emitter = static_cast<Emitter *>(obj);
+                            /* TBD */
                 throw NoriException("Scene::addChild(): You need to implement this for emitters");
             }
             break;

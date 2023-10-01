@@ -133,6 +133,7 @@ public:
             throw NoriException("A constructor for class \"%s\" could not be found!", name);
         return (*m_constructors)[name](propList);
     }
+
 private:
     static std::map<std::string, Constructor> *m_constructors;
 };

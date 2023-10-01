@@ -26,10 +26,47 @@ void Mesh::activate() {
         m_bsdf = static_cast<BSDF *>(
             NoriObjectFactory::createInstance("diffuse", PropertyList()));
     }
+    m_totalArea = 0;
+	if (m_emitter) {
+        const uint32_t triangleCnt = getTriangleCount();
+        for (uint32_t i = 0; i < triangleCnt; i++)
+        {
+            float area = surfaceArea(i);
+            m_totalArea += area;
+            dpdf.append(area);
+        }
+        dpdf.normalize();
+    }
+    
+}
+
+void Mesh::sampleTriangle(Sampler* sampler, EmitterQueryRecord& record)
+{
+    float pdf;
+    
+	uint32_t id = dpdf.sample(sampler->next1D(), pdf);
+    record.pdf *= pdf;
+    
+    const uint32_t i0 = m_F(0, id), i1 = m_F(1, id), i2 = m_F(2, id);
+    const Point3f p0 = m_V.col(i0), p1 = m_V.col(i1), p2 = m_V.col(i2);
+    auto barycentricCood = Warp::squreToTriangle(sampler->next2D());
+    record.light = barycentricCood.x() * p0 + barycentricCood.y() * p1 + barycentricCood.z() * p2;
+    record.wi = (record.light - record.obj).normalized();
+    if(m_N.size() != 0)
+    {
+        auto n1 = m_N.col(i0), n2 = m_N.col(i1), n3 = m_N.col(i2);
+        record.normal = (barycentricCood.x() * n1 + barycentricCood.y() * n2 + barycentricCood * n3).normalized();
+    } else
+    {
+        Vector3f v1 = p1 - p0, v2 = p2-p1;
+        record.normal = (v1.cross(v2)).normalized();
+    }
+    record.pdf *= 1/surfaceArea(id);
+
 }
 
 float Mesh::surfaceArea(uint32_t index) const {
-    uint32_t i0 = m_F(0, index), i1 = m_F(1, index), i2 = m_F(2, index);
+    const uint32_t i0 = m_F(0, index), i1 = m_F(1, index), i2 = m_F(2, index);
 
     const Point3f p0 = m_V.col(i0), p1 = m_V.col(i1), p2 = m_V.col(i2);
 

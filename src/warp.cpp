@@ -119,4 +119,13 @@ float Warp::squareToBeckmannPdf(const Vector3f &m, float alpha) {
     return azimuthal * longitudinal;
 }
 
+
+Vector3f Warp::squreToTriangle(const Point2f& sample) {
+    float alpha = 1 - sqrt(1 - sample.x());
+    float beta = sample.y() * sqrt(1 - sample.x());
+    float gama = 1 - alpha - beta;
+
+    return { alpha, beta, gama};
+}
+
 NORI_NAMESPACE_END

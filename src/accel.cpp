@@ -13,19 +13,16 @@
 NORI_NAMESPACE_BEGIN
 
 void Accel::addMesh(Mesh *mesh) {
-    if (m_mesh)
-        throw NoriException("Accel: only a single mesh is supported!");
-    m_mesh = mesh;
-    m_bbox = m_mesh->getBoundingBox();
+    octree.appendMesh(mesh);
 }
 
 void Accel::build() {
     /* Nothing to do here for now */
 
     auto start = std::chrono::high_resolution_clock::now();
-    octree.build(m_mesh);
+    octree.build();
     auto end = std::chrono::high_resolution_clock::now();
-    cout << m_mesh->getTriangleCount() << endl;
+    //cout << m_mesh->getTriangleCount() << endl;
     cout << "build time:" 
         <<std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << "ms\n";
     cout << "max depth: " << octree.max_depth << endl;
@@ -41,7 +38,7 @@ bool Accel::rayIntersect(const Ray3f &ray_, Intersection &its, bool shadowRay) c
     Ray3f ray(ray_); /// Make a copy of the ray (we will need to update its '.maxt' value)
 
     /* Brute force search through all triangles */
-    foundIntersection = octree.traverse(ray, its, f, shadowRay, m_mesh);
+    foundIntersection = octree.traverse(ray, its, f, shadowRay);
     if (foundIntersection && !shadowRay) {
         /* At this point, we now know that there is an intersection,
            and we know the triangle index of the closest such intersection.
