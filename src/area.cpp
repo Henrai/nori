@@ -12,9 +12,8 @@ public:
 	Color3f sample(EmitterQueryRecord& record, Sampler* sampler) override
 	{
 		mesh_->sampleTriangle( sampler, record);
-		Vector3f dir = (record.light - record.obj).normalized();
-		record.shadowRay = Ray3f(record.obj, dir, Epsilon, (record.light - record.obj).norm() - Epsilon);
-		return eval(record);
+		record.shadowRay = Ray3f(record.obj, record.wi, Epsilon, (record.light - record.obj).norm() - Epsilon);
+		return eval(record)/pdf(record);
 
 	}
 

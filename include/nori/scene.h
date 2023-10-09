@@ -48,9 +48,9 @@ public:
     /// Return a reference to an array containing all meshes
     const std::vector<Mesh *> &getMeshes() const { return m_meshes; }
 
-    Emitter* sampleLight(float sample, EmitterQueryRecord& record) const
+    Emitter* sampleLight(float sample, float& pdf) const
     {
-        size_t id = lightPdf.sample(sample, record.pdf);
+        size_t id = lightPdf.sample(sample, pdf);
 	    return m_emitters[id];
     }
 
