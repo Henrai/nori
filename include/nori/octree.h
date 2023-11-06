@@ -34,7 +34,7 @@ public:
 private:
     NodePtr root;
     static constexpr int MAX_NODE = 10;
-    static constexpr int MAX_DEPTH = 8;
+    static constexpr int MAX_DEPTH = 10;
     bool shouldSort = true;
     std::vector<Mesh*> meshes_;
     BoundingBox3f boundingBox_;

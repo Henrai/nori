@@ -22,7 +22,7 @@ public:
 			 Le = its.mesh->getEmitter()->eval(record);
 		}
 
-		if (its.mesh->getBSDF()->isDiffuse()) {
+
 		float lightPdf;
 		Emitter* light = scene->sampleLight(sampler->next1D(), lightPdf);
 
@@ -33,7 +33,7 @@ public:
 			return Le;
 		}
 
-		
+		if (its.mesh->getBSDF()->isDiffuse()) {
 			BSDFQueryRecord bRec = BSDFQueryRecord(its.toLocal(eRec.wi), its.toLocal(-ray.d), EMeasure::ESolidAngle);
 			Color3f bsdf = its.mesh->getBSDF()->eval(bRec);
 			float distance = (eRec.light - its.p).squaredNorm();
@@ -56,6 +56,7 @@ public:
 	std::string toString() const {
 		return tfm::format("WhittedIntegrator");
 	}
+private:
 	
 };
 

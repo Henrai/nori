@@ -19,7 +19,6 @@ public:
         Vector3f dir = frame.toWorld(Warp::squareToCosineHemisphere(sample));
         bool v = !scene->rayIntersect(Ray3f(its.p, dir));
         if (!v) return Color3f(0.f);
-        float cosTheta = std::max(0.f, frame.cosTheta(frame.toLocal(dir)));
 
         return 1;
     }
