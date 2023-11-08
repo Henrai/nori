@@ -54,7 +54,7 @@ void Scene::addChild(NoriObject *obj) {
                 {
                     Emitter* emitter = mesh->getEmitter();
                     m_emitters.push_back(emitter);
-                    lightPdf.append(emitter->getMesh()->getTotalArea());
+                    lightPdf.append(1);
                 }
             }
             break;

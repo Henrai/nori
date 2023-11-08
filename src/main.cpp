@@ -38,6 +38,7 @@ static void renderBlock(const Scene *scene, Sampler *sampler, ImageBlock &block)
     for (int y=0; y<size.y(); ++y) {
         for (int x=0; x<size.x(); ++x) {
             for (uint32_t i=0; i<sampler->getSampleCount(); ++i) {
+               
                 Point2f pixelSample = Point2f((float) (x + offset.x()), (float) (y + offset.y())) + sampler->next2D();
                 Point2f apertureSample = sampler->next2D();
 
@@ -46,7 +47,10 @@ static void renderBlock(const Scene *scene, Sampler *sampler, ImageBlock &block)
                 Color3f value = camera->sampleRay(ray, pixelSample, apertureSample);
 
                 /* Compute the incident radiance */
-                value *= integrator->Li(scene, sampler, ray);
+                auto c = integrator->Li(scene, sampler, ray);
+                value *= c;
+                if(!c.isValid())
+                cout << (x + offset.x()) << ", " << (y + offset.y()) << ": " << c.toString() << endl;
 
                 /* Store in the image block */
                 block.put(pixelSample, value);

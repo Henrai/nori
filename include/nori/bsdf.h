@@ -27,14 +27,16 @@ struct BSDFQueryRecord {
     /// Measure associated with the sample
     EMeasure measure;
 
+    bool isDebug;
+
     /// Create a new record for sampling the BSDF
-    BSDFQueryRecord(const Vector3f &wi)
-        : wi(wi), eta(1.f), measure(EUnknownMeasure) { }
+    BSDFQueryRecord(const Vector3f& wi)
+        : wi(wi), eta(1.f), measure(EUnknownMeasure), isDebug(false) { }
 
     /// Create a new record for querying the BSDF
     BSDFQueryRecord(const Vector3f &wi,
             const Vector3f &wo, EMeasure measure)
-        : wi(wi), wo(wo), eta(1.f), measure(measure) { }
+        : wi(wi), wo(wo), eta(1.f), measure(measure), isDebug(false) { }
 };
 
 /**

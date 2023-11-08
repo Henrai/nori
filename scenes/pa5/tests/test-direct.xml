@@ -8,7 +8,7 @@
 
 
 	<scene>
-		<integrator type="path_ems"/>
+		<integrator type="path_simple"/>
 
 		<camera type="perspective">
 		        <transform name="toWorld">
