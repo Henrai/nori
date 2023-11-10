@@ -46,7 +46,7 @@ public:
         float d = D(wh, m_alpha);
         float g = G1(bRec.wi, wh, m_alpha) * G1(bRec.wo, wh, m_alpha);
         float f = fresnel(wh.dot(bRec.wi), m_extIOR, m_intIOR);
-        
+
         return diffuse + m_ks * (d * f * g) / (4 * cosThetaI * cosThetaH * cosThetaO);
     }
 

@@ -14,10 +14,7 @@ public:
 		mesh_->sampleTriangle( sampler, record);
 		record.shadowRay = Ray3f(record.obj, record.wi, Epsilon, (record.light - record.obj).norm() - Epsilon);
 		float p = pdf(record);
-		if (p > 0.0f && !std::isnan(p) && !std::isinf(p)) {
-			return eval(record) / pdf(record);
-		}
-		return 0.f;
+		return eval(record) / pdf(record);
 
 	}
 
@@ -28,9 +25,9 @@ public:
 
 	float pdf(const EmitterQueryRecord& eRec) const override
 	{
-		float cosTheta = eRec.normal.dot(-eRec.wi);
-		if (cosTheta > 0.0f) return eRec.pdf;
-		return 0.f;
+
+		 return eRec.pdf;
+		
 	}
 
 	
