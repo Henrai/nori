@@ -45,12 +45,11 @@ public:
 			dir = L0 * bsdf * cosShading * coslight / distance / lightPdf;
 		}
 
+		// indir light, sample bsdf
 		Color3f indir = 0.f;
-	
 		BSDFQueryRecord bsdfRec = BSDFQueryRecord(its.toLocal(-ray.d));
 		Color3f c = its.mesh->getBSDF()->sample(bsdfRec, sampler->next2D());
 		Ray3f bsdfRay = Ray3f(its.p, its.toWorld(bsdfRec.wo));
-		
 		indir = Li(scene, sampler, bsdfRay, depth + 1, its.mesh->getBSDF()->isDiffuse()) *c;
 		
 		return (Le + indir + dir)/RR;
@@ -59,7 +58,6 @@ public:
 	std::string toString() const {
 		return tfm::format("PathSimpleIntegrator");
 	}
-private:
 
 };
 
